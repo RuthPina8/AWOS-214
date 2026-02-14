@@ -1,5 +1,5 @@
 #importaciones
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException
 import asyncio
 from typing import Optional
 
@@ -27,11 +27,11 @@ async def Hola():
           "mensaje": "Hola mundo FastAPI!" ,
           "estatus":"200"}   
  
-@app.get("/v1/usuario/{id}", tags=["Parametro obligatorio"])
+@app.get("/v1/paramentroOb/{id}", tags=["Parametro obligatorio"])
 async def consultaUno (id: int):
      return {"Se encontro usuario":id}
 
-@app.get("/v1/usuarios/", tags=["Parametro opcional"])
+@app.get("/v1/parametroOp/", tags=["Parametro opcional"])
 async def consultaTodos (id: Optional [int] = None):
     if id is not None:
          for usuario in usuarios:
@@ -40,3 +40,45 @@ async def consultaTodos (id: Optional [int] = None):
           return {"mensaje": "usuario no encontrado", "usuario":id}
          else:
              return {"mensaje": "No se proporciono id"}
+
+
+@app.get("/v1/usuarios/", tags=["CRUD HTTP"])
+async def leer_usuario ():
+     return {
+         "status": "200",
+         "total": len(usuarios),
+         "usuarios": usuarios
+     }
+
+@app.post("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_201_CREATED)
+async def crear_usuario (usuario: dict):# senececista usuario coon diccionario
+     for usr in usuarios:
+         if usr ["id"] == usuario.get("id"):
+            raise HTTPException(
+                status_code= 400,
+                detail= "El id ya existe"
+            )
+     usuarios.append(usuario)
+     return{
+          "mensaje": "Usuario agendado",
+          "Usuario": usuario
+     }   
+
+
+@app.put("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_204_NO_CONTENT)
+async def actualizar_usuario (usuario: dict):# senececista usuario coon diccionario
+     for usr in usuarios:
+         if usr ["id"] == usuario.get("id"):
+             
+             if "nombre" in usuario:
+                 usr["nombre"] = usuario["nombre"]
+
+             if "edad" in usuario:
+                 usr["edad"] = usuario["edad"]
+
+             return
+
+     raise HTTPException(
+          status_code=404,
+          detail="Usuario no encontrado"
+     )
