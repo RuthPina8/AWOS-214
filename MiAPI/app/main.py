@@ -2,13 +2,23 @@
 from fastapi import FastAPI, status, HTTPException
 import asyncio
 from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
+
 
 #instancia del servidor
 app = FastAPI(
      tittle="Mi primer API",
      description="Poñoñoin",
-     version="1.0.0")
-
+     version="1.0.0"
+     )
+# Configuración de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 usuarios = [
      {"id":1, "nombre":"Juan", "edad":"21"},
      {"id":2, "nombre":"Israel", "edad":"20"},
@@ -67,17 +77,31 @@ async def crear_usuario (usuario: dict):# senececista usuario coon diccionario
 
 @app.put("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_204_NO_CONTENT)
 async def actualizar_usuario (usuario: dict):# senececista usuario coon diccionario
-     for usr in usuarios:
+     for usr in usuarios:# con base a los datos obtenidos modificar con el id para hacer el cambio
          if usr ["id"] == usuario.get("id"):
-             
              if "nombre" in usuario:
                  usr["nombre"] = usuario["nombre"]
-
              if "edad" in usuario:
                  usr["edad"] = usuario["edad"]
-
              return
 
+     raise HTTPException(
+          status_code=404,
+          detail="Usuario no encontrado"
+     )
+
+
+@app.delete("/v1/usuarios/{id}", tags=["CRUD HTTP"], status_code=status.HTTP_200_OK)
+async def eliminar_usuario(id: int):
+     for usr in usuarios:#recibimos el id del usuario que queremos eliminar
+          if usr["id"] == id:#aqui checamos si el id coincide con alguno de la lista
+               usuarios.remove(usr)  #si lo encontramos lo elimina de la lista
+               return {
+                    "mensaje": "Usuario eliminado correctamente",
+                    "usuario": usr
+               }
+     
+     #si no encontramos  el usuario mandamos error 404, como se platico
      raise HTTPException(
           status_code=404,
           detail="Usuario no encontrado"
