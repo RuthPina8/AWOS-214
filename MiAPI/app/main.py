@@ -3,11 +3,11 @@ from fastapi import FastAPI, status, HTTPException
 import asyncio
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
-
+from pydantic import BaseModel, Field
 
 #instancia del servidor
 app = FastAPI(
-     tittle="Mi primer API",
+     title="Mi primer API",
      description="Poñoñoin",
      version="1.0.0"
      )
@@ -24,6 +24,15 @@ usuarios = [
      {"id":2, "nombre":"Israel", "edad":"20"},
      {"id":3, "nombre":"Yael", "edad":"19"},
 ]
+#modelo de validacion
+class usuario_create (BaseModel):
+    id: int = Field(..., gt=0, description="Identificador de usuario")
+    nombre: str = Field(..., min_length=3, max_length=50, example="Juan Pérez")
+    edad: int = Field(..., ge=1, le=123, description="Edad valida entr 1 y 123")
+    
+class usuario_delete (BaseModel):
+    id: int = Field(..., gt=0, description="Identificador de usuario a eliminar")
+   
 
 #Endpoints
 @app.get("/", tags=["Inicio"])
@@ -61,18 +70,18 @@ async def leer_usuario ():
      }
 
 @app.post("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_201_CREATED)
-async def crear_usuario (usuario: dict):# senececista usuario coon diccionario
-     for usr in usuarios:
-         if usr ["id"] == usuario.get("id"):
+async def crear_usuario(usuario: usuario_create):
+    for usr in usuarios:
+        if usr["id"] == usuario.id:
             raise HTTPException(
-                status_code= 400,
-                detail= "El id ya existe"
+                status_code=400,
+                detail="El id ya existe"
             )
-     usuarios.append(usuario)
-     return{
-          "mensaje": "Usuario agendado",
-          "Usuario": usuario
-     }   
+    usuarios.append(usuario.dict())  
+    return {
+        "mensaje": "Usuario agendado",
+        "Usuario": usuario
+    }   
 
 
 @app.put("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_204_NO_CONTENT)
@@ -92,9 +101,9 @@ async def actualizar_usuario (usuario: dict):# senececista usuario coon dicciona
 
 
 @app.delete("/v1/usuarios/{id}", tags=["CRUD HTTP"], status_code=status.HTTP_200_OK)
-async def eliminar_usuario(id: int):
+async def eliminar_usuario(id: usuario_delete):
      for usr in usuarios:#recibimos el id del usuario que queremos eliminar
-          if usr["id"] == id:#aqui checamos si el id coincide con alguno de la lista
+          if usr["id"] == id.id:#aqui checamos si el id coincide con alguno de la lista
                usuarios.remove(usr)  #si lo encontramos lo elimina de la lista
                return {
                     "mensaje": "Usuario eliminado correctamente",
