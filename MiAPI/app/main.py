@@ -30,9 +30,6 @@ class usuario_create (BaseModel):
     nombre: str = Field(..., min_length=3, max_length=50, example="Juan Pérez")
     edad: int = Field(..., ge=1, le=123, description="Edad valida entr 1 y 123")
     
-class usuario_delete (BaseModel):
-    id: int = Field(..., gt=0, description="Identificador de usuario a eliminar")
-   
 
 #Endpoints
 @app.get("/", tags=["Inicio"])
@@ -69,7 +66,7 @@ async def leer_usuario ():
          "usuarios": usuarios
      }
 
-@app.post("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_201_CREATED)
+@app.post("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_201_CREATED)#agregar
 async def crear_usuario(usuario: usuario_create):
     for usr in usuarios:
         if usr["id"] == usuario.id:
@@ -84,7 +81,7 @@ async def crear_usuario(usuario: usuario_create):
     }   
 
 
-@app.put("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_204_NO_CONTENT)
+@app.put("/v1/usuarios/", tags=["CRUD HTTP"], status_code=status.HTTP_204_NO_CONTENT)#actualizar
 async def actualizar_usuario (usuario: dict):# senececista usuario coon diccionario
      for usr in usuarios:# con base a los datos obtenidos modificar con el id para hacer el cambio
          if usr ["id"] == usuario.get("id"):
@@ -101,9 +98,9 @@ async def actualizar_usuario (usuario: dict):# senececista usuario coon dicciona
 
 
 @app.delete("/v1/usuarios/{id}", tags=["CRUD HTTP"], status_code=status.HTTP_200_OK)
-async def eliminar_usuario(id: usuario_delete):
+async def eliminar_usuario(id: int):
      for usr in usuarios:#recibimos el id del usuario que queremos eliminar
-          if usr["id"] == id.id:#aqui checamos si el id coincide con alguno de la lista
+          if usr["id"] == id:#aqui checamos si el id coincide con alguno de la lista
                usuarios.remove(usr)  #si lo encontramos lo elimina de la lista
                return {
                     "mensaje": "Usuario eliminado correctamente",
