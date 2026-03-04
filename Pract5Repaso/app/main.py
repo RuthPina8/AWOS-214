@@ -1,8 +1,5 @@
 from datetime import datetime
 from fastapi import FastAPI, status, HTTPException
-import asyncio
-from typing import Optional
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Literal # solo nos va a permitir ciertos valores especificos que en nuestro caso es para el estado del libro, si es disponible o prestado 
 

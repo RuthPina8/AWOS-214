@@ -1,9 +1,11 @@
 #importaciones
-from fastapi import FastAPI, status, HTTPException
+from fastapi import Depends, FastAPI, status, HTTPException, Depends
 import asyncio
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import secrets
 
 #instancia del servidor
 app = FastAPI(
@@ -29,8 +31,22 @@ class usuario_create (BaseModel):
     id: int = Field(..., gt=0, description="Identificador de usuario")
     nombre: str = Field(..., min_length=3, max_length=50, example="Juan Pérez")
     edad: int = Field(..., ge=1, le=123, description="Edad valida entr 1 y 123")
-    
 
+class usuario_delete(BaseModel):
+    id: int = Field (..., gt=0, description="identificador de usuario")
+
+#Seguridad HTTP Basic
+security= HTTPBasic()
+def verificar_Peticion(credenciales:HTTPBasicCredentials=Depends(security)):# este es para que en caso de que haya un usuario correcto es el que se va a dejar que elimine
+    userAuth = secrets.compare_digest(credenciales.username, "poñoñoin")
+    passAuth = secrets.compare_digest(credenciales.password, "123456")
+
+    if not(userAuth and passAuth):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Credenciales no autorizadas"
+        )
+    return credenciales.username
 #Endpoints
 @app.get("/", tags=["Inicio"])
 async def bienvenida():
@@ -98,14 +114,14 @@ async def actualizar_usuario (usuario: dict):# senececista usuario coon dicciona
 
 
 @app.delete("/v1/usuarios/{id}", tags=["CRUD HTTP"], status_code=status.HTTP_200_OK)
-async def eliminar_usuario(id: int):
-     for usr in usuarios:#recibimos el id del usuario que queremos eliminar
+async def eliminar_usuario(id: int,userAuth:str= Depends(verificar_Peticion)):
+     for index, usr in enumerate (usuarios):#recibimos el id del usuario que queremos eliminar
           if usr["id"] == id:#aqui checamos si el id coincide con alguno de la lista
-               usuarios.remove(usr)  #si lo encontramos lo elimina de la lista
-               return {
-                    "mensaje": "Usuario eliminado correctamente",
-                    "usuario": usr
-               }
+            usuario_eliminado = usuarios.pop(index)#si lo encontramos lo elimina de la lista
+            return { "mensaje": f"Usuario eliminado correctamente{userAuth}"}
+          return{"mensaje": "Usuario no encontrado", "id": id}
+                    
+            
      
      #si no encontramos  el usuario mandamos error 404, como se platico
      raise HTTPException(
