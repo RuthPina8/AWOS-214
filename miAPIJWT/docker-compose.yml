@@ -1,0 +1,10 @@
+#SE ORQUESTA EL AREA PARA IR CREANDO EL DOCKERFILE
+services:
+  api:
+    build: .
+    container_name: miApiJWT
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app/app 
+    
